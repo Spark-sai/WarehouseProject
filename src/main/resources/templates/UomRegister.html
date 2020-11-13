@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org/">
+
+<head>
+    <meta charset="ISO-8859-1">
+    <title>Insert title here</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+
+        <div class="card">
+            <div class="card-header bg-primary text-white text-center">
+                <h3>UOM REGISTE PAGE</h3>
+            </div>
+
+
+            <div class="card-body">
+                <form id="uomRegForm" th:action="@{/Uom/save}" method="POST" th:object="${uom}">
+
+                    <div class="row">
+                        <div class="col-2">
+                            <label>UOM TYPE</label>
+                        </div>
+                        <div class="col-5">
+                            <select th:field="*{uomType}" class="form-control">
+                                <option value="">-SELECT-</option>
+                                <option value="PACKING">PACKING</option>
+                                <option value="NO PACKING">NO PACKING</option>
+                                <option value="NA">NA</option>
+                            </select>
+                        </div>
+                        <div class="col-5">
+                            <span id="uomTypeError"></span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-2">
+                            <label>UOM MODEL</label>
+                        </div>
+                        <div class="col-5">
+                            <input type="text" th:field="*{uomModel}" class="form-control" />
+                        </div>
+                        <div class="col-5">
+                            <span id="uomModelError"></span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-2">
+                            <label>DESCRIPTION</label>
+                        </div>
+                        <div class="col-5">
+                            <textarea th:field="*{description}" class="form-control"></textarea>
+                        </div>
+                        <div class="col-5">
+                            <span id="descriptionError"></span>
+                        </div>
+                    </div>
+                    <input type="submit" value="ADD UOM" class="btn btn-success" />
+                </form>
+            </div>
+            <!--card body end-->
+
+            <div class="card-footer bg-info text-white text-center" th:if="${message != null}">
+                <span th:text="${message}" ></span>
+            </div>
+
+        </div>
+        <!--card end-->
+
+    </div>
+    <!--container end-->
+	<script>
+        $(document).ready(function(){
+            //1. hide error section
+            $("#uomTypeError").hide();
+            $("#uomModelError").hide();
+            $("#descriptionError").hide();
+
+            //2. error variable
+            var uomTypeError = false;
+            var uomModelError = false;
+            var descriptionError = false;
+
+            //3. validate function
+            function validate_uomType() {
+                var val = $("#uomType").val();
+                if(val=='') {
+                    $("#uomTypeError").show();
+                    $("#uomTypeError").html("SELECT <b>UOM TYPE</b>");
+                    $("#uomTypeError").css("color","red");
+                    uomTypeError = false;
+                } else{
+                    $("#uomTypeError").hide();
+                    uomTypeError = true;
+                }
+                return uomTypeError;
+            }
+
+            function validate_uomModel() {
+                var val = $("#uomModel").val();
+                var exp = /^[A-Z\-\s]{4,8}$/;
+                if(val=='') {
+                    $("#uomModelError").show();
+                    $("#uomModelError").html("Model <b>can not be empty</b>");
+                    $("#uomModelError").css("color","red");
+                    uomModelError = false;
+                } else if(!exp.test(val)) {
+                    $("#uomModelError").show();
+                    $("#uomModelError").html("Model <b>is not vaild</b>");
+                    $("#uomModelError").css("color","red");
+                    uomModelError = false;
+                } else {
+                	//ajax call start
+                	$.ajax({
+                		url : 'validate',
+                		data: {'model':val},
+                		success:function(resTxt) {
+                			if(resTxt=='') { //no error
+                				$("#uomModelError").hide();
+                                uomModelError = true;
+                			} else{ 
+                				$("#uomModelError").show();
+                                $("#uomModelError").html(resTxt);
+                                $("#uomModelError").css("color","red");
+                                uomModelError = false;
+                			}
+                		}
+                	});
+                	//ajax call end
+                    
+                }
+                return uomModelError;
+            }
+
+            function validate_description() {
+                var val = $("#description").val();
+                var exp = /^[A-Za-z0-9\-\.\,\s]{10,100}$/;
+                if(val=='') {
+                    $("#descriptionError").show();
+                    $("#descriptionError").html("Description <b>Can not be empty</b>");
+                    $("#descriptionError").css("color","red");
+                    descriptionError = false;
+                } else if(!exp.test(val)) {
+                    $("#descriptionError").show();
+                    $("#descriptionError").html("Description <b>must be 10-100 chars only!</b>");
+                    $("#descriptionError").css("color","red");
+                    descriptionError = false;
+                } else {
+                    $("#descriptionError").hide();
+                    descriptionError = true;
+                }
+                return descriptionError;
+            }
+
+            //4. link input with action
+            $("#uomType").change(function(){
+                validate_uomType();
+            });
+            $("#uomModel").keyup(function(){
+                validate_uomModel();
+            });
+            $("#description").keyup(function(){
+                validate_description();
+            });
+            
+            //5. submit button
+            $("#uomRegForm").submit(function(){
+                //call all validate functions
+                validate_uomType();
+                validate_uomModel();
+                validate_description();
+                // check all error variables
+                // if all true then submit form return true
+                if(uomModelError && uomTypeError && descriptionError)
+                    return true;
+                // else false
+                else return false;
+            });
+
+        });
+    </script>    
+</body>
+
+</html>
